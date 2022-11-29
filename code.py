@@ -51,7 +51,7 @@ while True:
         keyboard.press(Keycode.I)
         keyboard.release(Keycode.I)
         print("hi")
-        sleep(.02)
+        sleep(.02) 
     
     if btn3.value:
         keyboard.press(Keycode.SHIFT, Keycode.GUI, Keycode.FOUR)
