@@ -43,9 +43,6 @@ class kdl_interpreter():
             # Append final state at the end
             self.states.append( current_state)
 
-                
-
-
 
     def key_pressed(self, row, column):
         """Marks a given key as pressed and returns its value"""
@@ -71,5 +68,5 @@ class kdl_interpreter():
             self.state_semaphore = False
         return
 
-    def is_pressed(self, row, column):
+    def is_held(self, row, column):
         return self.is_pressed[row][column]
