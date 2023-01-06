@@ -36,9 +36,8 @@ class kdl_interpreter():
                     action = tokens[1]
 
                     # If the action is a keyword, add it as (id, parameter), otherwise, (0, char)
-                    if not action in keywords: current_state[row][column] = (0, action)
-                    else: 
-                        current_state[row][column] = (keywords.index(action)+1, tokens[2])
+                    if action in keywords: current_state[row][column] = (keywords.index(action)+1, tokens[2])
+                    else: current_state[row][column] = (0, action)
                         
             # Append final state at the end
             self.states.append( current_state)
