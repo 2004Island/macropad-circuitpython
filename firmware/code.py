@@ -7,6 +7,14 @@ from random import randint
 from adafruit_hid.keyboard import Keyboard
 from adafruit_hid.keycode import Keycode
 
+from analogio import AnalogIn
+
+analog1_in = AnalogIn(board.A1)
+analog2_in = AnalogIn(board.A2)
+analog3_in = AnalogIn(board.A0)
+
+def get_voltage(pin):
+    return (pin.value * 3.3) / 65536
 
 i2c = busio.I2C(scl=board.GP1, sda=board.GP0) # This RPi Pico way to call I2C
 display = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c)
@@ -47,12 +55,13 @@ for i in range(len(pixels)):
     pixels[i] = (randint(0,255),randint(0,255),randint(0,255))
        
 while True:
+    #[analog.value for analog in [analog1_in,analog2_in,analog3_in]]
     if not btn1.value:
         keyboard.press(Keycode.SHIFT, Keycode.GUI, Keycode.THREE)
         keyboard.release(Keycode.SHIFT, Keycode.GUI, Keycode.THREE)
         print("screen shotted")
         sleep(.02)
-        
+        	
     if not btn2.value:
         keyboard.press(Keycode.H)
         keyboard.release(Keycode.H)
