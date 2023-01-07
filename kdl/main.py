@@ -7,7 +7,7 @@ table = {'7':(0,0), '8':(0,1), '9':(0,2), '4':(1,0), '5':(1,1), '6':(1,2), '1':(
 
 def print_keys(interpreter):
     print()
-    print("+-------+")
+    print("+-------+")  
     print(f"|State:{interpreter.state}|")
     print("+"+("---+"*len(interpreter.is_pressed)))
     for i in range(len(interpreter.is_pressed)):
