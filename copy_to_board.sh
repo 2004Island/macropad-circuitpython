@@ -1,2 +1,2 @@
 #!/bin/sh
-cp ./code.py /media/alex/CIRCUITPY/code.py
+cp ./code_1.py /media/alex/CIRCUITPY/code.py
