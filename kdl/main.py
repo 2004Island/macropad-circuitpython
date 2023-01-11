@@ -19,7 +19,7 @@ def print_keys(interpreter):
 def key_pressed(e):
     if not e.name in list(table.keys()): return
     if e.event_type == 'up':
-        interpreter.key_released(*table.get(e.name))
+        print(interpreter.key_released(*table.get(e.name)))
     elif e.event_type == 'down':
         print(interpreter.key_pressed (*table.get(e.name)))
     #print_keys(interpreter)

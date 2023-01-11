@@ -1,50 +1,102 @@
+from random import random
+
+def is_numeric(string):
+    for char in string:
+        if char not in "0123456789":
+            return False
+    return True
+
 class key():
-    def __init__(self, attributes = []):
+    def __init__(self, state, attributes = []):
         self.color = (0,0,0)
         self.lit = False
-        
-        remove = []
+        self.state = state
+        self.lit_on_reset = False
 
-        actions = {}
+        actions = []
 
+        # Get static properties from the list
+        # TODO: change back to list? Then multiple of same command type can be executed?
+        # Ex: display clear, display text "Hello"
         for i in range(len(attributes)):
             action = attributes[i]
             if action[0] == "color":
+                if action[1] == "random":
+                    self.color = (int(random()*255), int(random()*255), int(random()*255))
+                    continue
                 self.color = tuple(map(int,action[1:]))
-                remove.append(attributes[i])
             elif action[0] == "on":
-                if action[1] in ["always"]:
+                if action[1] == "always":
                     self.lit = True
+                    self.lit_on_reset = True
+                elif action[1] == "never":
+                    self.lit = False
+                    self.lit_on_reset = False
+                else:
+                    actions.append((action[0], action[1:]))
             else:
-                actions[action[0]] = action[1:]
+                # And add actions to the dictionary of actions
+                actions.append((action[0], action[1:]))
 
         self.actions = actions
 
     def get_color(self): 
-        return self.color
+        return self.color if self.lit else (0,0,0)
 
     def get_lit(self): 
         return self.lit
 
     def pressed(self):
-        pass
+        led_update = False
+        print(f"Pressed! {self.actions}")
+        state = self.state
+        for action, args in self.actions:
+            print(action)
+            # Handle the 'on' lighting action
+            if action == "on":
+                if args[0] == "pressed":
+                    self.lit = True
+                    led_update = True
+
+            # Handle the setstate actions. --ALWAYS DO LAST--
+            if action == "setstate":
+                print(int(args[0]))
+                state = int(args[0])
+
+            # Return the current state for no state change
+        return state, led_update
+
+    def reset(self):
+        self.lit = self.lit_on_reset
 
     def released(self):
-        pass
+        led_update = False
+        for action, args in self.actions:
+            # Handle the 'on' lighting action
+            if action == "on":
+                if args[0] == "pressed":
+                    self.lit = False
+                    led_update = True
+
+        return (self.state, led_update)     
 
     def __str__(self):
         return f"Key Color:{self.color} Lit:{self.lit} Actions:{self.actions}"
 
 
 class kdl_interpreter():
+    # TODO: Provide pointers to be called for each action. Example, lit would call 
+    # keyboard_manager_pointer.lighting_on(row, col)
     def __init__(self, sizes, source_file):
         """Takes in a 1D array of sizes containing the columns for a given row. The number of rows is the length
         of the list. Also takes in a path to a kdl source file to parse"""
 
         self.is_pressed = [[False for _ in range(i)] for i in sizes]
         self.states = []
+        self.sizes = sizes
         self.state = 0
         self.state_semaphore = False
+        self.changed_state = False
 
         keywords = ["key", "setstate", "on", "color", "press"]
 
@@ -59,7 +111,7 @@ class kdl_interpreter():
                 tokens = list(map( lambda x : x.strip(), list(map(lambda x : x.lower(), line.split(' ')))))
 
                 if tokens[0] == "state":
-                    if not tokens[1].isnumeric(): 
+                    if not is_numeric(tokens[1]): 
                         print(f"NOT NUMERIC: |{tokens[1]}|")
                         return
 
@@ -83,56 +135,39 @@ class kdl_interpreter():
                             actions.append([tokens[i]])
                         else:
                             actions[-1].append(tokens[i].split(',')[0])
-                    
-                    current_state[row][column] = key(attributes=actions)
-                    print(current_state[row][column])
-                '''# If State x
-                if tokens[0] == "State":
-                    # Append previous state (num, state) and start on next state. 
-                    if not current_state_num == None: 
-                        self.states.append(current_state)
-                        current_state = [[None for _ in range(i)] for i in sizes]
+                    current_state[row][column] = key(current_state_num, attributes=actions)
 
-                    current_state_num = int(tokens[1])
-
-                # Defining key mapping
-                elif tokens[0].endswith(':') and ',' in tokens[0]:
-                    row, column = tokens[0].split(',')
-                    column = int(column.split(':')[0])
-                    row = int(row)
-                    action = tokens[1]
-
-                    # If the action is a keyword, add it as (id, parameter), otherwise, (0, char)
-                    if action in keywords: current_state[row][column] = (keywords.index(action)+1, tokens[2])
-                    else: current_state[row][column] = (0, action)
-                        
             # Append final state at the end
-            self.states.append( current_state)'''
-
+            self.states.append(current_state)
 
     def key_pressed(self, row, column):
-        """Marks a given key as pressed and returns its value"""
-
+        """Marks a given key as pressed and returns a tuple of actions, formatted (changed_state, led_update)"""
         # Dont get stuck in a loop switching states rapidly. Set state
-        if not self.state_semaphore and self.states[self.state][row][column][0] == 1:
-            self.state_semaphore = True
-            self.state = int(self.states[self.state][row][column][1])
+        new_state, led_update = self.states[self.state][row][column].pressed()
+        changed_state = not new_state == self.state
+        self.state = new_state
 
-        # TODO: Out of bounds error handling. Mark pressed
-        self.is_pressed[row][column] = True
+        if changed_state:
+            ro = 0
+            for row_len in self.sizes:
+                for col in range(row_len):
+                    print(ro,col)
+                    self.states[self.state][ro][col].reset()
+                ro += 1
 
-        # Return none if it was an action, otherwise return key
-        if not self.states[self.state][row][column][0] == 0:
-            return
-
-        return self.states[self.state][row][column][1]
+        return (changed_state, led_update)
 
     def key_released(self, row, column):
+        """Marks a given key as released and returns a tuple of actions, formatted (changed_state, led_update)"""
         # Release semaphor and mark key unpressed
-        self.is_pressed[row][column] = False
-        if self.states[self.state][row][column][0] == 1:
-            self.state_semaphore = False
-        return
+        return self.states[self.state][row][column].released()
+
+    def get_color(self, row, column):
+        return self.states[self.state][row][column].get_color()
+
+    def get_lit(self, row, column):
+        return self.states[self.state][row][column].get_lit()
 
     def is_held(self, row, column):
+        pass
         return self.is_pressed[row][column]
