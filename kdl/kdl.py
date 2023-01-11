@@ -16,8 +16,10 @@ class key():
         actions = []
 
         # Get static properties from the list
-        # TODO: change back to list? Then multiple of same command type can be executed?
-        # Ex: display clear, display text "Hello"
+        # TODO: make press ["press", [...list of buttons and key names...]]
+        # TODO: diplay commands. Clear, print, draw (image)
+        # TODO: make type ["type", "one single string"]   make string using ' '.join()
+
         for i in range(len(attributes)):
             action = attributes[i]
             if action[0] == "color":
@@ -50,6 +52,11 @@ class key():
         led_update = False
         print(f"Pressed! {self.actions}")
         state = self.state
+        display_command = []
+        press_sequence = []
+        type_str = []
+        errors = []
+
         for action, args in self.actions:
             print(action)
             # Handle the 'on' lighting action
@@ -63,14 +70,20 @@ class key():
                 print(int(args[0]))
                 state = int(args[0])
 
+            
+
             # Return the current state for no state change
-        return state, led_update
+        return (state, led_update, display_command, press_sequence, type_str, errors)
 
     def reset(self):
         self.lit = self.lit_on_reset
 
     def released(self):
         led_update = False
+        display_command = []
+        press_sequence = []
+        type_str = []
+        errors = []
         for action, args in self.actions:
             # Handle the 'on' lighting action
             if action == "on":
@@ -78,7 +91,7 @@ class key():
                     self.lit = False
                     led_update = True
 
-        return (self.state, led_update)     
+        return (self.state, led_update, display_command, press_sequence, type_str, errors)     
 
     def __str__(self):
         return f"Key Color:{self.color} Lit:{self.lit} Actions:{self.actions}"
@@ -141,9 +154,10 @@ class kdl_interpreter():
             self.states.append(current_state)
 
     def key_pressed(self, row, column):
-        """Marks a given key as pressed and returns a tuple of actions, formatted (changed_state, led_update)"""
-        # Dont get stuck in a loop switching states rapidly. Set state
-        new_state, led_update = self.states[self.state][row][column].pressed()
+        """Marks a given key as released and returns a tuple of actions, formatted (changed_state, led_update, display_command, press_sequence, type_str, errors)"""
+        # press_sequence is sequence of key codes held until the last one is pressed
+        # type_str is a sting to be pressed one key at a time
+        new_state, led_update, display_command, press_sequence, type_str, errors = self.states[self.state][row][column].pressed()
         changed_state = not new_state == self.state
         self.state = new_state
 
@@ -155,11 +169,12 @@ class kdl_interpreter():
                     self.states[self.state][ro][col].reset()
                 ro += 1
 
-        return (changed_state, led_update)
+        return (changed_state, led_update, display_command, press_sequence, type_str, errors)
 
     def key_released(self, row, column):
-        """Marks a given key as released and returns a tuple of actions, formatted (changed_state, led_update)"""
-        # Release semaphor and mark key unpressed
+        """Marks a given key as released and returns a tuple of actions, formatted (changed_state, led_update, display_command, press_sequence, type_str, error)"""
+        # press_sequence is sequence of key codes held until the last one is pressed
+        # type_str is a sting to be pressed one key at a time
         return self.states[self.state][row][column].released()
 
     def get_color(self, row, column):

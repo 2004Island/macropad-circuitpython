@@ -66,19 +66,16 @@ while True:
 
             if value:
                 # Return list of commands to be run by keyboard
-                layer_change, led_updated = interpreter.key_pressed(*row_col)
-                if layer_change:
-                    for j in range(len(pixels)): 
-                        pixels[j] = interpreter.get_color(*i_to_row_col[j])
+                layer_change, led_updated, display_command, press_sequence, type_str, errors = interpreter.key_pressed(*row_col)
             else:
-                _, led_updated = interpreter.key_released(*row_col)
+                layer_change, led_updated, display_command, press_sequence, type_str, errors = interpreter.key_released(*row_col)
 
             if led_updated: pixels[i] = interpreter.get_color(*i_to_row_col[i])
 
-    if layer_change:
-        for i in range(len(pixels)):
-            pixels[i] = interpreter.get_color(*i_to_row_col[i])
-            layer_change = False
+            if layer_change:
+                for i in range(len(pixels)):
+                    pixels[i] = interpreter.get_color(*i_to_row_col[i])
+                layer_change = False
 
     #print(list(map(lambda x : x.value, btns)))
 
