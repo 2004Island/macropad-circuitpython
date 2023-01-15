@@ -50,7 +50,7 @@ class key():
 
     def pressed(self):
         led_update = False
-        print(f"Pressed! {self.actions}")
+        #print(f"Pressed! {self.actions}")
         state = self.state
         display_command = []
         press_sequence = []
@@ -67,8 +67,9 @@ class key():
 
             # Handle the setstate actions. --ALWAYS DO LAST--
             if action == "setstate":
-                print(int(args[0]))
+                #print(int(args[0]))
                 state = int(args[0])
+
 
             
 
@@ -91,6 +92,12 @@ class key():
                     self.lit = False
                     led_update = True
 
+            if action == "display":
+                if args[0] == "clear":
+                    display_command.append(("clear"))
+                elif args[0] == "text":
+                    display_command.append(("write", int(args[1]), int(args[2]), ' '.join(args[3:])))
+
         return (self.state, led_update, display_command, press_sequence, type_str, errors)     
 
     def __str__(self):
@@ -106,12 +113,13 @@ class kdl_interpreter():
 
         self.is_pressed = [[False for _ in range(i)] for i in sizes]
         self.states = []
+        self.backgrounds = []
         self.sizes = sizes
         self.state = 0
         self.state_semaphore = False
         self.changed_state = False
 
-        keywords = ["key", "setstate", "on", "color", "press"]
+        keywords = ["key", "setstate", "on", "color", "press", "display"]
 
         with open(source_file, 'r') as file:
             # Track currently being assembled state and its number
@@ -165,7 +173,7 @@ class kdl_interpreter():
             ro = 0
             for row_len in self.sizes:
                 for col in range(row_len):
-                    print(ro,col)
+                    #print(ro,col)
                     self.states[self.state][ro][col].reset()
                 ro += 1
 

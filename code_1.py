@@ -1,5 +1,5 @@
 from time import sleep
-import kdl
+import kdl, pbm_codec
 
 import digitalio, busio, board, usb_hid, neopixel
 import adafruit_ssd1306
@@ -20,7 +20,7 @@ def get_voltage(pin):
 i2c = busio.I2C(scl=board.GP1, sda=board.GP0) # This RPi Pico way to call I2C
 display = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c)
 display.fill(0)
-pixels = neopixel.NeoPixel(board.GP14, 12)
+pixels = neopixel.NeoPixel(board.GP14, 12, brightness = 1.0)
 display.text("Sus", 0,0,1)
 display.show()
 
@@ -47,6 +47,9 @@ for i in range(len(pixels)):
     if interpreter.get_lit(*i_to_row_col[i]): pixels[i] = interpreter.get_color(*i_to_row_col[i])
     else: pixels[i] = (0,0,0)
 
+
+pbm_codec.draw_pbm(display, "LL_Honoka3_128x64.pbm", 0, 0)
+display.show()
 
 prev_state = [False for i in range(len(btns))]
 layer_change = False
@@ -76,6 +79,24 @@ while True:
                 for i in range(len(pixels)):
                     pixels[i] = interpreter.get_color(*i_to_row_col[i])
                 layer_change = False
+
+            if not display_command == []:
+                for command in display_command:
+                    #print (command)
+                    if command == "clear":
+                        #print("Command -> clear")
+                        display.fill(0) # TODO: handle background stuff
+                        display.show()
+                    elif command[0] == "write":
+                        #print("write")
+                        _, x, y, msg = command
+                        display.text(msg, x, y, 1)
+                        display.show()
+
+
+            '''if not press_sequence == []:
+                for key in press_sequence:
+                    keyboard.press()'''
 
     #print(list(map(lambda x : x.value, btns)))
 
