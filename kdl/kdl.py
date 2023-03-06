@@ -58,6 +58,12 @@ class key():
                 print(converted_keys)
                 actions.append(("press", converted_keys))
 
+            elif action[0] == "type":
+                converted_keys = []
+                for key in ' '.join(action[1:]):
+                    converted_keys += decode_key(key)
+                actions.append(("type", converted_keys))
+
             elif action[0] == "on":
                 if action[1] == "always":
                     self.lit = True
@@ -86,7 +92,7 @@ class key():
         state = self.state
         display_command = []
         press_sequence = []
-        type_str = []
+        type_str = ""
         errors = []
 
         for action, args in self.actions:
@@ -101,6 +107,10 @@ class key():
             if action == "press":
                 for key in args:
                     press_sequence.append(key)
+
+            # Type is one long string of chars to type
+            if action == "type":
+                type_str = args
 
             # Handle the setstate actions. --ALWAYS DO LAST--
             if action == "setstate":
@@ -120,7 +130,7 @@ class key():
         led_update = False
         display_command = []
         press_sequence = []
-        type_str = []
+        type_str = ""
         errors = []
         for action, args in self.actions:
             # Handle the 'on' lighting action
@@ -156,7 +166,7 @@ class kdl_interpreter():
         self.state_semaphore = False
         self.changed_state = False
 
-        keywords = ["key", "setstate", "on", "color", "press", "display"]
+        keywords = ["key", "setstate", "on", "color", "press", "type", "display"]
 
         with open(source_file, 'r') as file:
             # Track currently being assembled state and its number
@@ -208,12 +218,10 @@ class kdl_interpreter():
 
         columns = len(self.states[self.state][0])
         rows = len(self.states[self.state])
-        error = "Hi"
 
         if changed_state:
             [self.states[self.state][ro][col].reset() for col in range(columns) for ro in range(rows)]
 
-        print("KDL", press_sequence)
         return (changed_state, led_update, display_command, press_sequence, type_str, errors)
 
     def key_released(self, row, column):

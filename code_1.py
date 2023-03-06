@@ -83,10 +83,11 @@ while True:
                 layer_change = False
 
             if not press_sequence == []:
-                    print(*press_sequence)
-                    print(type(press_sequence))
-                    keyboard.press(*press_sequence)
-                    keyboard.release(*press_sequence)
+                keyboard.send(*press_sequence)
+
+            if not type_str == "":
+                for key in type_str:
+                    keyboard.send(key)
 
             while not display_command == []:
                 command = display_command.pop(0)
