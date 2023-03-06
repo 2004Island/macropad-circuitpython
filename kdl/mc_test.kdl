@@ -2,7 +2,7 @@ State 0
 key 0,0: color 255 100 0, on pressed, press a
 key 0,1: color 255 255 255, on always, press b
 key 0,2: color 255 255 255, on always, press c
-key 0,3: color 255 0 0, on pressed, press 1, display clear, display text 0 0 Hello world!
+key 0,3: color 255 0 0, on pressed, press 1, display text 0 0 Hello world!
 key 1,0: color 255 255 255, on always, press d
 key 1,1: color 255 255 255, on always, press e
 key 1,2: color 255 255 255, on always, press f
@@ -13,7 +13,7 @@ key 2,2: color 255 255 255, on always, setstate 1
 key 2,3: color 0 0 255, on pressed, press 3, display clear, display text 0 0 Goodbye world!
 
 State 1
-key 0,0: color 255 0 0, on pressed, press A
+key 0,0: color 255 0 0, on pressed, press ALT TAB
 key 0,1: color 255 0 0, on pressed, press B
 key 0,2: color 255 0 0, on pressed, press C
 key 0,3: color 255 0 0, on pressed, press !

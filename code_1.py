@@ -59,8 +59,8 @@ while True:
     #isplay.text(f"C:{interpreter.get_lit(*i_to_row_col[0])}", 20,0,1)
     #display.text(f"S:{interpreter.state}", 0,0,1)
     #display.show()
-    
-    for i in range(len(pixels)):
+    i = 0
+    while i < len(pixels):
         value = not btns[i].value
         if not prev_state[i] == value:
             #print("KEY UPDATE!")
@@ -76,27 +76,34 @@ while True:
             if led_updated: pixels[i] = interpreter.get_color(*i_to_row_col[i])
 
             if layer_change:
-                for i in range(len(pixels)):
-                    pixels[i] = interpreter.get_color(*i_to_row_col[i])
+                j = 0
+                while j < len(pixels):
+                    pixels[j] = interpreter.get_color(*i_to_row_col[j])
+                    j += 1
                 layer_change = False
 
-            if not display_command == []:
-                for command in display_command:
-                    #print (command)
-                    if command == "clear":
-                        #print("Command -> clear")
-                        display.fill(0) # TODO: handle background stuff
-                        display.show()
-                    elif command[0] == "write":
-                        #print("write")
-                        _, x, y, msg = command
-                        display.text(msg, x, y, 1)
-                        display.show()
+            if not press_sequence == []:
+                    print(*press_sequence)
+                    print(type(press_sequence))
+                    keyboard.press(*press_sequence)
+                    keyboard.release(*press_sequence)
 
+            while not display_command == []:
+                command = display_command.pop(0)
+                #print (command)
+                if command == "clear":
+                    #print("Command -> clear")
+                    display.fill(0) # TODO: handle background stuff
+                    display.show()
+                elif command[0] == "write":
+                    #print("write")
+                    _, x, y, msg = command
+                    display.text(msg, x, y, 1)
+                    display.show()
 
-            '''if not press_sequence == []:
-                for key in press_sequence:
-                    keyboard.press()'''
+                
+
+        i += 1
 
     #print(list(map(lambda x : x.value, btns)))
 

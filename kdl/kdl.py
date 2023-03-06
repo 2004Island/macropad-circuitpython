@@ -1,8 +1,29 @@
 from random import random
 
+LETTERS = "abcdefghijklmnopqrstuvwxyz"
+LETTERS_UPPER = LETTERS.upper()
+NUMBERS = "0123456789"
+NUMBERS_UPPER = "!@#$%^&*()"
+OTHER_KEYS = {"RET": 0x28, "ESC": 0x29, "BACK": 0x2A, "TAB": 0x2B, "SPACE": 0x2C, " ": 0x2C, "CTRL": 0xE0, "ALT": 0xE2, "WIN": 0xE3, "CMD": 0xE3}
+
+def decode_key(key):
+    if key in LETTERS: # Lowercase letters keycodes start at 4 ('a') and go to 30 ('z')
+        return [(ord(key)-ord('a'))+4]
+    
+    if key in LETTERS_UPPER: # Uppercase includes shift]
+        return [(ord(key)-ord('A'))+4, 0xE1]
+    
+    if key in NUMBERS: # Numbers start at 0x1E, starting with 1
+        return [(ord(key)-ord('1'))+0x1E]
+    
+    if key in NUMBERS_UPPER: # Similarly, these keys are numbers with the shift key held
+        return [NUMBERS_UPPER.index(key)+0x1E, 0xE1]
+    
+    return [OTHER_KEYS.get(key, None)]
+
 def is_numeric(string):
     for char in string:
-        if char not in "0123456789":
+        if char not in NUMBERS:
             return False
     return True
 
@@ -22,11 +43,21 @@ class key():
 
         for i in range(len(attributes)):
             action = attributes[i]
+
             if action[0] == "color":
                 if action[1] == "random":
                     self.color = (int(random()*255), int(random()*255), int(random()*255))
                     continue
                 self.color = tuple(map(int,action[1:]))
+
+            elif action[0] == "press":
+                converted_keys = []
+                for key in action:
+                    print(key)
+                    if key != "press": converted_keys += decode_key(key)
+                print(converted_keys)
+                actions.append(("press", converted_keys))
+
             elif action[0] == "on":
                 if action[1] == "always":
                     self.lit = True
@@ -36,6 +67,7 @@ class key():
                     self.lit_on_reset = False
                 else:
                     actions.append((action[0], action[1:]))
+
             else:
                 # And add actions to the dictionary of actions
                 actions.append((action[0], action[1:]))
@@ -58,12 +90,17 @@ class key():
         errors = []
 
         for action, args in self.actions:
-            print(action)
+            #print(action)
             # Handle the 'on' lighting action
             if action == "on":
                 if args[0] == "pressed":
                     self.lit = True
                     led_update = True
+
+            # Press keys sequentially, used for shortcuts
+            if action == "press":
+                for key in args:
+                    press_sequence.append(key)
 
             # Handle the setstate actions. --ALWAYS DO LAST--
             if action == "setstate":
@@ -129,21 +166,21 @@ class kdl_interpreter():
             # Parse file line by line
             for line in file:
                 # Split lines by spaces, makes them lowercase and removes whitespace
-                tokens = list(map( lambda x : x.strip(), list(map(lambda x : x.lower(), line.split(' ')))))
+                tokens = list(map( lambda x : x.strip(), list(line.split(' '))))
 
-                if tokens[0] == "state":
+                if tokens[0].lower() == "state":
                     if not is_numeric(tokens[1]): 
                         print(f"NOT NUMERIC: |{tokens[1]}|")
                         return
 
-                    print(f"state: {tokens[1]}")
+                    #print(f"state: {tokens[1]}")
                     if not current_state_num == None: 
                         self.states.append(current_state)
                         current_state = [[None for _ in range(i)] for i in sizes]
 
                     current_state_num = int(tokens[1])
                     
-                elif tokens[0] == "key":
+                elif tokens[0].lower() == "key":
                     if tokens[1].endswith(':') and ',' in tokens[1]:
                         # Transform x,y: to row, column tuple
                         row, column = map(int, map(lambda x : x.split(':')[0], tokens[1].split(',')))
@@ -169,14 +206,14 @@ class kdl_interpreter():
         changed_state = not new_state == self.state
         self.state = new_state
 
-        if changed_state:
-            ro = 0
-            for row_len in self.sizes:
-                for col in range(row_len):
-                    #print(ro,col)
-                    self.states[self.state][ro][col].reset()
-                ro += 1
+        columns = len(self.states[self.state][0])
+        rows = len(self.states[self.state])
+        error = "Hi"
 
+        if changed_state:
+            [self.states[self.state][ro][col].reset() for col in range(columns) for ro in range(rows)]
+
+        print("KDL", press_sequence)
         return (changed_state, led_update, display_command, press_sequence, type_str, errors)
 
     def key_released(self, row, column):
