@@ -48,7 +48,7 @@ for i in range(len(pixels)):
     else: pixels[i] = (0,0,0)
 
 
-pbm_codec.draw_pbm(display, "LL_Honoka3_128x64.pbm", 0, 0)
+pbm_codec.draw_pbm(display, "img.pbm", 0, 0)
 display.show()
 
 prev_state = [False for i in range(len(btns))]

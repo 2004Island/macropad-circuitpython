@@ -4,7 +4,7 @@ LETTERS = "abcdefghijklmnopqrstuvwxyz"
 LETTERS_UPPER = LETTERS.upper()
 NUMBERS = "0123456789"
 NUMBERS_UPPER = "!@#$%^&*()"
-OTHER_KEYS = {"RET": 0x28, "ESC": 0x29, "BACK": 0x2A, "TAB": 0x2B, "SPACE": 0x2C, " ": 0x2C, "CTRL": 0xE0, "ALT": 0xE2, "WIN": 0xE3, "CMD": 0xE3}
+OTHER_KEYS = {"ENTER": 0x28, "ESC": 0x29, "BACK": 0x2A, "TAB": 0x2B, "SPACE": 0x2C, " ": 0x2C, "CTRL": 0xE0, "ALT": 0xE2, "WIN": 0xE3, "CMD": 0xE3}
 
 def decode_key(key):
     if key in LETTERS: # Lowercase letters keycodes start at 4 ('a') and go to 30 ('z')
@@ -18,6 +18,7 @@ def decode_key(key):
     
     if key in NUMBERS_UPPER: # Similarly, these keys are numbers with the shift key held
         return [NUMBERS_UPPER.index(key)+0x1E, 0xE1]
+    
     
     return [OTHER_KEYS.get(key, None)]
 
@@ -198,6 +199,9 @@ class kdl_interpreter():
 
                     actions = []
                     for i in range(2, len(tokens)):
+                        # Handle comments
+                        if tokens[i] == '//': break
+
                         if tokens[i] in keywords:
                             print(tokens[i])
                             actions.append([tokens[i]])
