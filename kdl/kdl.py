@@ -106,12 +106,17 @@ class key():
 
             # Press keys sequentially, used for shortcuts
             if action == "press":
+                press_list = []
                 for key in args:
-                    press_sequence.append(key)
+                    press_list.append(key)
+                press_sequence.append(("press", press_list))
 
             # Type is one long string of chars to type
             if action == "type":
-                type_str = args
+                press_sequence.append(("type", args))
+
+            if action == "wait":
+                press_sequence.append(("wait", float(args[0])))
 
             # Handle the setstate actions. --ALWAYS DO LAST--
             if action == "setstate":
@@ -167,7 +172,7 @@ class kdl_interpreter():
         self.state_semaphore = False
         self.changed_state = False
 
-        keywords = ["key", "setstate", "on", "color", "press", "type", "display"]
+        keywords = ["key", "setstate", "on", "color", "press", "type", "display", "wait"]
 
         with open(source_file, 'r') as file:
             # Track currently being assembled state and its number
